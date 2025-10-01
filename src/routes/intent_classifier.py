@@ -142,6 +142,16 @@ class IntentClassifier:
         return self.known_apps
 
 
+def classify_with_context(self, text: str, has_pending_action: bool = False) -> str:
+    """
+    Clasifica intención considerando el contexto de conversación
+    """
+    if has_pending_action:
+        # Si hay acción pendiente, priorizar el procesamiento de la respuesta
+        return "conversation_response"
+    
+    return self.classify(text)
+
 # Función de prueba rápida
 if __name__ == "__main__":
     classifier = IntentClassifier()
@@ -159,3 +169,6 @@ if __name__ == "__main__":
         print(f"'{text}' -> {classifier.classify(text)}")
         debug = classifier.debug_classify(text)
         print(f"   Debug: {debug['reasons']}\n")
+
+
+        # En intent_classifier.py, agrega este método a la clase:

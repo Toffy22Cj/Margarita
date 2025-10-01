@@ -1,3 +1,4 @@
+# [file name]: src/system/system_files.py
 import os
 import re
 from pathlib import Path
@@ -21,7 +22,7 @@ class SystemFiles:
 
         # Crear el archivo con contenido inicial
         path.write_text(content, encoding="utf-8")
-        return f"Archivo creado en: {path}"
+        return f"✅ Archivo creado en: {path}"
 
     def create_folder(self, folder_path: str) -> str:
         """Crea una carpeta en la ruta especificada"""
@@ -30,7 +31,34 @@ class SystemFiles:
             path = self.base_path / path
 
         path.mkdir(parents=True, exist_ok=True)
-        return f"Carpeta creada en: {path}"
+        return f"✅ Carpeta creada en: {path}"
+
+    def create_folder_in_location(self, folder_name: str, location: str) -> str:
+        """Crea una carpeta en una ubicación específica"""
+        if not location:
+            return self.create_folder(folder_name)
+        
+        # Construir ruta completa
+        location_path = Path(location)
+        if not location_path.is_absolute():
+            location_path = self.base_path / location_path
+        
+        full_path = location_path / folder_name
+        full_path.mkdir(parents=True, exist_ok=True)
+        return f"✅ Carpeta '{folder_name}' creada en: {full_path}"
+
+    def create_file_in_location(self, file_name: str, location: str, content: str = "") -> str:
+        """Crea un archivo en una ubicación específica"""
+        if not location:
+            return self.create_file(file_name, content)
+        
+        # Construir ruta completa
+        location_path = Path(location)
+        if not location_path.is_absolute():
+            location_path = self.base_path / location_path
+        
+        full_path = location_path / file_name
+        return self.create_file(str(full_path), content)
 
     def find_or_create_folder(self, folder_path: str, auto_create: bool = False) -> dict:
         """Busca una carpeta y si no existe, pregunta si se desea crear"""
@@ -100,6 +128,27 @@ class SystemFiles:
             results["message"] = f"❌ Error en la búsqueda: {str(e)}"
         
         return results
+
+    def check_folder_exists(self, folder_path: str) -> bool:
+        """Verifica si una carpeta existe"""
+        path = Path(folder_path)
+        if not path.is_absolute():
+            path = self.base_path / path
+        return path.exists() and path.is_dir()
+
+    def get_suggested_folders(self) -> list:
+        """Retorna una lista de carpetas sugeridas comunes"""
+        common_folders = [
+            "Documentos", "Escritorio", "Descargas", 
+            "Imágenes", "Música", "Videos", "Proyectos"
+        ]
+        
+        existing_folders = []
+        for folder in common_folders:
+            if self.check_folder_exists(folder):
+                existing_folders.append(folder)
+        
+        return existing_folders
 
     def _clean_filename(self, filename: str) -> str:
         """Limpia el nombre de archivo de caracteres inválidos"""

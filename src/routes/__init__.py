@@ -1,14 +1,14 @@
-"""
-Sistema de enrutamiento - Clasificadores y routers
-"""
+# [file name]: src/routes/__init__.py
 from .router import Router
 from .intent_classifier import IntentClassifier
 from .system_command_classifier import SystemCommandClassifier
-from .system_command_router import SystemCommandRouter
+
+# Eliminar esta línea si existe:
+# from .system_command_router import SystemCommandRouter
 
 __all__ = [
-    'Router', 
+    'Router',
     'IntentClassifier', 
-    'SystemCommandClassifier', 
-    'SystemCommandRouter'
+    'SystemCommandClassifier',
+    # 'SystemCommandRouter'  # Eliminar esta línea
 ]

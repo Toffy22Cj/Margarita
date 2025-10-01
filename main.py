@@ -44,7 +44,7 @@ class MargaritaApp:
     
     def process_text(self, text: str) -> str:
         """
-        Procesa texto y devuelve la respuesta
+        Procesa texto y devuelve la respuesta - CORREGIDO
         """
         try:
             if not text or text.strip() == "":
@@ -52,20 +52,8 @@ class MargaritaApp:
             
             print(f"📝 Procesando: '{text}'")
             
-            # Clasificar intención
-            debug_info = self.classifier.debug_classify(text)
-            intent = debug_info['final_intent']
-            
-            print(f"🎯 Intención: {intent}")
-            for reason in debug_info['reasons']:
-                print(f"   📍 {reason}")
-            
-            # Enrutar
-            if intent == "system_command":
-                response = self.router.auto_send(text)
-            else:
-                response = self.router.send(intent, text)
-            
+            # DELEGAR TODO AL ROUTER - él maneja conversaciones pendientes automáticamente
+            response = self.router.auto_send(text)
             return response
             
         except Exception as e:
@@ -73,7 +61,7 @@ class MargaritaApp:
     
     def voice_mode(self):
         """
-        Modo de reconocimiento de voz continuo
+        Modo de reconocimiento de voz continuo - CORREGIDO
         """
         print("\n🎤 MODO VOZ ACTIVADO")
         print("Di 'modo texto' para cambiar a entrada por teclado")
@@ -102,16 +90,17 @@ class MargaritaApp:
                 
                 print(f"📝 Tú dijiste: '{text}'")
                 
-                # Comandos especiales del modo voz
-                if any(cmd in text.lower() for cmd in ["modo texto", "texto", "teclado"]):
+                # Comandos especiales del modo voz - VERIFICAR ANTES DE PROCESAR
+                text_lower = text.lower()
+                if any(cmd in text_lower for cmd in ["modo texto", "texto", "teclado"]):
                     self.text_mode()
                     return
                 
-                if any(cmd in text.lower() for cmd in ["salir", "terminar", "adiós"]):
+                if any(cmd in text_lower for cmd in ["salir", "terminar", "adiós"]):
                     self.quit_app()
                     return
                 
-                # Procesar texto
+                # Procesar texto (ahora maneja conversaciones pendientes automáticamente)
                 response = self.process_text(text)
                 print(f"🤖 Margarita: {response}")
                 
@@ -136,7 +125,7 @@ class MargaritaApp:
     
     def text_mode(self):
         """
-        Modo de entrada por teclado
+        Modo de entrada por teclado - CORREGIDO
         """
         print("\n⌨️  MODO TEXTO ACTIVADO")
         print("Escribe 'modo voz' para cambiar a reconocimiento de voz")
@@ -153,16 +142,17 @@ class MargaritaApp:
                 if not text:
                     continue
                 
-                # Comandos especiales del modo texto
-                if text.lower() in ["modo voz", "voz", "audio"]:
+                # Comandos especiales del modo texto - VERIFICAR ANTES DE PROCESAR
+                text_lower = text.lower()
+                if text_lower in ["modo voz", "voz", "audio"]:
                     self.voice_mode()
                     return
                 
-                if text.lower() in ["salir", "exit", "quit"]:
+                if text_lower in ["salir", "exit", "quit"]:
                     self.quit_app()
                     return
                 
-                # Procesar texto
+                # Procesar texto (ahora maneja conversaciones pendientes automáticamente)
                 response = self.process_text(text)
                 print(f"🤖 Margarita: {response}")
                 
@@ -251,6 +241,8 @@ class MargaritaApp:
         """
         print("\n👋 Saliendo de Margarita...")
         self.running = False
+        # Limpiar cualquier conversación pendiente al salir
+        self.router.clear_conversation()
         print("¡Hasta pronto! 🎀")
 
 

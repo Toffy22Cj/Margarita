@@ -1,145 +1,192 @@
-# [file name]: src/routes/system_command_router.py
+# [file name]: src/routes/system_command_classifier.py
 import re
-from pathlib import Path
-from .system_command_classifier import SystemCommandClassifier  # Import relativo
-from src.system.system_executor import SystemCommandExecutor
+import os
 
-
-class SystemCommandRouter:
+class SystemCommandClassifier:
     """
-    Integra el clasificador y el ejecutor de comandos.
+    Clasificador de comandos del sistema MEJORADO
     """
 
-    def __init__(self, config_file: str = "configs/apps_config.json"):
-        self.classifier = SystemCommandClassifier()
-        self.executor = SystemCommandExecutor(config_file)
-
-    def handle_command(self, text: str) -> str:
-        """
-        Recibe un texto, lo clasifica y lo ejecuta.
-        Devuelve el resultado como string.
-        """
-        result = self.classifier.classify(text)
-
-        if result["confidence"] == "none" or result["type"] is None:
-            return f"No entendí el comando: '{text}'"
-
-        return self.executor.execute_command(result["type"], result["params"])
-
-    def parse_folder_command(self, command: str) -> dict:
-        """
-        Analiza comandos de creación de carpetas para extraer nombre y ubicación.
-        
-        Ejemplos:
-        - "crea una carpeta en documentos" → nombre: "nueva carpeta", ubicación: "documentos"
-        - "crea carpeta proyectos en escritorio" → nombre: "proyectos", ubicación: "escritorio"
-        - "crea una carpeta llamada mis archivos" → nombre: "mis archivos", ubicación: None
-        """
-        
-        command_lower = command.lower()
-        
-        # Patrones para extraer nombre y ubicación
-        patterns = [
-            # Patrón: "crea [una] carpeta [llamada] <nombre> en <ubicación>"
-            r'crea\s+(?:una\s+)?carpeta\s+(?:llamada\s+)?([^\n]+?)\s+en\s+([^\n]+)$',
-            # Patrón: "crea [una] carpeta en <ubicación> [llamada] <nombre>"
-            r'crea\s+(?:una\s+)?carpeta\s+en\s+([^\n]+?)\s+(?:llamada\s+)?([^\n]+)$',
-            # Patrón: "crea carpeta <nombre>"
-            r'crea\s+(?:una\s+)?carpeta\s+(.+)$'
-        ]
-        
-        for pattern in patterns:
-            match = re.search(pattern, command_lower)
-            if match:
-                groups = match.groups()
-                if len(groups) == 2:
-                    # Determinar qué grupo es nombre y cuál ubicación
-                    if 'en' in command_lower.split('carpeta')[-1].split(groups[0])[0]:
-                        # Formato: "crea carpeta <nombre> en <ubicación>"
-                        folder_name = groups[0].strip()
-                        location = groups[1].strip()
-                    else:
-                        # Formato: "crea carpeta en <ubicación> <nombre>"
-                        location = groups[0].strip()
-                        folder_name = groups[1].strip()
-                    
-                    return {
-                        "folder_name": folder_name,
-                        "location": location,
-                        "success": True
-                    }
-                elif len(groups) == 1:
-                    # Solo nombre, sin ubicación
-                    return {
-                        "folder_name": groups[0].strip(),
-                        "location": None,
-                        "success": True
-                    }
-        
-        return {
-            "folder_name": None,
-            "location": None,
-            "success": False,
-            "error": "No se pudo entender el comando de carpeta"
+    def __init__(self):
+        self.command_patterns = {
+            'open_app': [
+                r'abre\s+(.+)', 
+                r'inicia\s+(.+)', 
+                r'ejecuta\s+(.+)',
+                r'open\s+(.+)',
+                r'run\s+(.+)',
+                r'lanzar\s+(.+)',
+                r'start\s+(.+)'
+            ],
+            'create_folder': [
+                # Patrones básicos (sin ubicación)
+                r'crea\s+(?:una\s+)?carpeta\s+(?:llamada\s+)?(.+)$',
+                r'make\s+(?:a\s+)?folder\s+(?:called\s+)?(.+)$',
+                r'nueva\s+carpeta\s+(.+)$',
+            ],
+            'create_file': [
+                r'crea\s+(?:un\s+)?archivo\s+(?:llamado\s+)?(.+)',
+                r'create\s+(?:a\s+)?file\s+(?:called\s+)?(.+)',
+                r'nuevo\s+archivo\s+(.+)',
+            ],
+            'search_folder': [
+                r'busca\s+(?:la\s+)?carpeta\s+(.+)',
+                r'encuentra\s+(?:la\s+)?carpeta\s+(.+)',
+                r'search\s+(?:for\s+)?folder\s+(.+)',
+            ],
+            'system_info': [
+                r'informaci[oó]n\s+del\s+sistema',
+                r'system\s+information',
+                r'system\s+info',
+            ]
         }
 
-    def handle_advanced_folder_command(self, command: str) -> str:
+    def sanitize_param(self, param: str) -> str:
+        """Limpia parámetros"""
+        if not param:
+            return None
+        safe = re.sub(r'[<>:"/\\|?*]', '', param).strip()
+        return safe if safe else None
+
+    def parse_complex_folder_command(self, text: str) -> dict:
         """
-        Maneja comandos avanzados de creación de carpetas con ubicación.
+        Análisis especializado para comandos complejos de carpeta
         """
-        parsed = self.parse_folder_command(command)
+        text_lower = text.lower().strip()
         
-        if not parsed["success"]:
-            return f"❌ {parsed['error']}"
+        print(f"[Classifier] Analizando comando complejo: {text}")
         
-        folder_name = parsed["folder_name"]
-        location = parsed["location"]
+        # Patrón 1: "crea carpeta <nombre> en <ubicación>"
+        pattern1 = r'crea\s+(?:una\s+)?carpeta\s+(?:llamada\s+)?([^\n]+?)\s+en\s+([^\n]+)'
+        match1 = re.search(pattern1, text_lower)
+        if match1:
+            folder_name = self.sanitize_param(match1.group(1))
+            location = self.sanitize_param(match1.group(2))
+            print(f"[Classifier] Patrón 1: nombre='{folder_name}', ubicación='{location}'")
+            return {
+                'type': 'create_folder',
+                'params': {'folder_name': folder_name, 'location': location},
+                'matched_text': text,
+                'confidence': 'high'
+            }
         
-        if not folder_name:
-            return "❌ No especificaste el nombre de la carpeta"
+        # Patrón 2: "crea carpeta en <ubicación> <nombre>"
+        pattern2 = r'crea\s+(?:una\s+)?carpeta\s+en\s+([^\n]+?)\s+(?:llamada\s+)?([^\n]+)'
+        match2 = re.search(pattern2, text_lower)
+        if match2:
+            location = self.sanitize_param(match2.group(1))
+            folder_name = self.sanitize_param(match2.group(2))
+            print(f"[Classifier] Patrón 2: nombre='{folder_name}', ubicación='{location}'")
+            return {
+                'type': 'create_folder',
+                'params': {'folder_name': folder_name, 'location': location},
+                'matched_text': text,
+                'confidence': 'high'
+            }
         
-        # Si no hay ubicación específica, crear en base_path
-        if not location:
-            return self.executor.execute_command('create_folder', folder_name)
+        # Patrón 3: "crea carpeta en <ubicación>" (sin nombre)
+        pattern3 = r'crea\s+(?:una\s+)?carpeta\s+en\s+([^\n]+)'
+        match3 = re.search(pattern3, text_lower)
+        if match3:
+            location = self.sanitize_param(match3.group(1))
+            print(f"[Classifier] Patrón 3: ubicación='{location}' (sin nombre)")
+            return {
+                'type': 'create_folder',
+                'params': {'folder_name': None, 'location': location},
+                'matched_text': text,
+                'confidence': 'high'
+            }
         
-        # Buscar la ubicación especificada
-        files_manager = self.executor.get_files_manager()
-        search_result = files_manager.search_folder(location)
+        return None
+
+    def parse_complex_file_command(self, text: str) -> dict:
+        """Análisis para comandos de archivo con ubicación"""
+        text_lower = text.lower().strip()
         
-        if search_result["found"]:
-            # Usar la primera coincidencia encontrada
-            target_path = search_result["matches"][0]["path"]
-            full_path = Path(target_path) / folder_name
-            return self.executor.execute_command('create_folder', str(full_path))
-        else:
-            # La ubicación no existe, preguntar si crear
-            return (f"❌ No encontré la ubicación '{location}'. "
-                   f"¿Quieres crear la carpeta '{folder_name}' en tu directorio principal? "
-                   f"(Responde 'sí' para crear o 'no' para cancelar)")
+        # Patrón: "crea archivo <nombre> en <ubicación>"
+        pattern = r'crea\s+(?:un\s+)?archivo\s+(?:llamado\s+)?([^\n]+?)\s+en\s+([^\n]+)'
+        match = re.search(pattern, text_lower)
+        if match:
+            return {
+                'type': 'create_file',
+                'params': {
+                    'file_name': self.sanitize_param(match.group(1)),
+                    'location': self.sanitize_param(match.group(2))
+                },
+                'matched_text': text,
+                'confidence': 'high'
+            }
+        
+        return None
+
+    def classify(self, text: str) -> dict:
+        """
+        Clasifica comandos con análisis complejo primero
+        """
+        text_lower = text.lower().strip()
+        
+        print(f"[Classifier] Clasificando: '{text}'")
+        
+        # PRIMERO: Análisis complejo para comandos con ubicación
+        if any(word in text_lower for word in ['crea', 'carpeta']):
+            folder_result = self.parse_complex_folder_command(text)
+            if folder_result:
+                return folder_result
+        
+        if any(word in text_lower for word in ['crea', 'archivo', 'file']):
+            file_result = self.parse_complex_file_command(text)
+            if file_result:
+                return file_result
+        
+        # SEGUNDO: Búsqueda normal por patrones
+        for command_type, patterns in self.command_patterns.items():
+            for pattern in patterns:
+                match = re.search(pattern, text_lower)
+                if match:
+                    # Comandos sin parámetros
+                    if command_type == 'system_info':
+                        return {
+                            'type': command_type,
+                            'params': '',
+                            'matched_text': text,
+                            'confidence': 'high'
+                        }
+                    
+                    # Comandos con parámetros simples
+                    raw_param = match.group(1).strip() if match.group(1) else None
+                    param = self.sanitize_param(raw_param)
+
+                    return {
+                        'type': command_type,
+                        'params': param,
+                        'matched_text': text,
+                        'confidence': 'high' if param else 'medium'
+                    }
+
+        return {
+            'type': None,
+            'params': None,
+            'matched_text': text,
+            'confidence': 'none'
+        }
 
 
+# Pruebas
 if __name__ == "__main__":
-    import re
-    router = SystemCommandRouter()
-
-    print("=== Probador de Comandos del Sistema ===")
-    print("Escribe comandos como:")
-    print("- abre navegador")
-    print("- crea carpeta proyectos")
-    print("- crea carpeta documentos en escritorio")
-    print("- crea una carpeta llamada mis archivos en documentos")
-    print("Escribe 'salir' para terminar.\n")
-
-    while True:
-        user_input = input(">> ").strip()
-        if user_input.lower() in ["salir", "exit", "quit"]:
-            print("Adiós 👋")
-            break
-
-        # Procesar comandos de carpeta de manera avanzada
-        if any(word in user_input.lower() for word in ['crea', 'carpeta']):
-            response = router.handle_advanced_folder_command(user_input)
-        else:
-            response = router.handle_command(user_input)
-        
-        print(f"🤖 {response}")
+    classifier = SystemCommandClassifier()
+    
+    test_commands = [
+        "crea una carpeta en documentos",
+        "crea carpeta proyectos en escritorio", 
+        "crea una carpeta llamada mis archivos en documentos",
+        "crea archivo notas.txt en documentos",
+        "abre navegador"
+    ]
+    
+    print("🔧 Probando clasificador MEJORADO:")
+    for cmd in test_commands:
+        result = classifier.classify(cmd)
+        print(f"\n📝 Comando: '{cmd}'")
+        print(f"   Tipo: {result['type']}")
+        print(f"   Parámetros: {result['params']}")
+        print(f"   Confianza: {result['confidence']}")
