@@ -1,12 +1,10 @@
 {
   "navegador": "microsoft-edge-stable",
-  "firefox": "firefox",
-  "chrome": "google-chrome",
   "edge": "microsoft-edge-stable",
   "calculadora": "gnome-calculator",
   "editor": "gnome-text-editor",
   "vscode": "/usr/share/code/code",
-  "terminal": "gnome-terminal",
+  "terminal": "kitty",
   "kitty": "kitty",
   "archivos": "nautilus",
   "documentos": "libreoffice",

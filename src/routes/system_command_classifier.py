@@ -25,9 +25,9 @@ class SystemCommandClassifier:
                 r'nueva\s+carpeta\s+(.+)$',
             ],
             'create_file': [
-                r'crea\s+(?:un\s+)?archivo\s+(?:llamado\s+)?(.+)',
-                r'create\s+(?:a\s+)?file\s+(?:called\s+)?(.+)',
-                r'nuevo\s+archivo\s+(.+)',
+                r'crea\s+(?:un\s+)?archivo\s+(?:llamado\s+)?(.+)$',
+                r'create\s+(?:a\s+)?file\s+(?:called\s+)?(.+)$',
+                r'nuevo\s+archivo\s+(.+)$',
             ],
             'search_folder': [
                 r'busca\s+(?:la\s+)?carpeta\s+(.+)',
@@ -54,7 +54,7 @@ class SystemCommandClassifier:
         """
         text_lower = text.lower().strip()  # Solo para matching
         
-        print(f"[Classifier] Analizando comando complejo: {text}")
+        print(f"[Classifier] Analizando comando complejo de carpeta: {text}")
         
         # Patrón 1: "crea carpeta <nombre> en <ubicación>"
         pattern1 = r'crea\s+(?:una\s+)?carpeta\s+(?:llamada\s+)?([^\n]+?)\s+en\s+([^\n]+)'
@@ -65,7 +65,7 @@ class SystemCommandClassifier:
             start2, end2 = match1.span(2)
             folder_name = self.sanitize_param(text[start1:end1])
             location = self.sanitize_param(text[start2:end2])
-            print(f"[Classifier] Patrón 1: nombre='{folder_name}', ubicación='{location}'")
+            print(f"[Classifier] Patrón 1 carpeta: nombre='{folder_name}', ubicación='{location}'")
             return {
                 'type': 'create_folder',
                 'params': {'folder_name': folder_name, 'location': location},
@@ -82,7 +82,7 @@ class SystemCommandClassifier:
             start2, end2 = match2.span(2)
             location = self.sanitize_param(text[start1:end1])
             folder_name = self.sanitize_param(text[start2:end2])
-            print(f"[Classifier] Patrón 2: nombre='{folder_name}', ubicación='{location}'")
+            print(f"[Classifier] Patrón 2 carpeta: nombre='{folder_name}', ubicación='{location}'")
             return {
                 'type': 'create_folder',
                 'params': {'folder_name': folder_name, 'location': location},
@@ -97,7 +97,7 @@ class SystemCommandClassifier:
             # Extraer del texto ORIGINAL para preservar mayúsculas
             start, end = match3.span(1)
             location = self.sanitize_param(text[start:end])
-            print(f"[Classifier] Patrón 3: ubicación='{location}' (sin nombre)")
+            print(f"[Classifier] Patrón 3 carpeta: ubicación='{location}' (sin nombre)")
             return {
                 'type': 'create_folder',
                 'params': {'folder_name': None, 'location': location},
@@ -111,19 +111,59 @@ class SystemCommandClassifier:
         """Análisis para comandos de archivo con ubicación"""
         text_lower = text.lower().strip()
         
-        # Patrón: "crea archivo <nombre> en <ubicación>"
-        pattern = r'crea\s+(?:un\s+)?archivo\s+(?:llamado\s+)?([^\n]+?)\s+en\s+([^\n]+)'
-        match = re.search(pattern, text_lower)
-        if match:
+        print(f"[Classifier] Analizando comando complejo de archivo: {text}")
+        
+        # Patrón 1: "crea archivo <nombre> en <ubicación>"
+        pattern1 = r'crea\s+(?:un\s+)?archivo\s+(?:llamado\s+)?([^\n]+?)\s+en\s+([^\n]+)'
+        match1 = re.search(pattern1, text_lower)
+        if match1:
             # Extraer del texto ORIGINAL para preservar mayúsculas
-            start1, end1 = match.span(1)
-            start2, end2 = match.span(2)
+            start1, end1 = match1.span(1)
+            start2, end2 = match1.span(2)
+            file_name = self.sanitize_param(text[start1:end1])
+            location = self.sanitize_param(text[start2:end2])
+            print(f"[Classifier] Patrón 1 archivo: nombre='{file_name}', ubicación='{location}'")
             return {
                 'type': 'create_file',
                 'params': {
-                    'file_name': self.sanitize_param(text[start1:end1]),
-                    'location': self.sanitize_param(text[start2:end2])
+                    'file_name': file_name,
+                    'location': location
                 },
+                'matched_text': text,
+                'confidence': 'high'
+            }
+        
+        # Patrón 2: "crea archivo en <ubicación> <nombre>"
+        pattern2 = r'crea\s+(?:un\s+)?archivo\s+en\s+([^\n]+?)\s+(?:llamado\s+)?([^\n]+)'
+        match2 = re.search(pattern2, text_lower)
+        if match2:
+            # Extraer del texto ORIGINAL para preservar mayúsculas
+            start1, end1 = match2.span(1)
+            start2, end2 = match2.span(2)
+            location = self.sanitize_param(text[start1:end1])
+            file_name = self.sanitize_param(text[start2:end2])
+            print(f"[Classifier] Patrón 2 archivo: nombre='{file_name}', ubicación='{location}'")
+            return {
+                'type': 'create_file',
+                'params': {
+                    'file_name': file_name,
+                    'location': location
+                },
+                'matched_text': text,
+                'confidence': 'high'
+            }
+        
+        # Patrón 3: "crea archivo en <ubicación>" (sin nombre)
+        pattern3 = r'crea\s+(?:un\s+)?archivo\s+en\s+([^\n]+)'
+        match3 = re.search(pattern3, text_lower)
+        if match3:
+            # Extraer del texto ORIGINAL para preservar mayúsculas
+            start, end = match3.span(1)
+            location = self.sanitize_param(text[start:end])
+            print(f"[Classifier] Patrón 3 archivo: ubicación='{location}' (sin nombre)")
+            return {
+                'type': 'create_file',
+                'params': {'file_name': None, 'location': location},
                 'matched_text': text,
                 'confidence': 'high'
             }
@@ -196,6 +236,8 @@ if __name__ == "__main__":
         "crea carpeta Proyectos en Escritorio", 
         "crea una carpeta llamada Mis Archivos en Documentos",
         "crea archivo Notas.txt en Documentos",
+        "crea un archivo en Documentos",
+        "crea archivo en Documentos",
         "abre navegador"
     ]
     

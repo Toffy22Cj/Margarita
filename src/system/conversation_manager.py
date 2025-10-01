@@ -69,10 +69,20 @@ class ConversationManager:
                 file_name = params.get('file_name')
                 location = params.get('location')
                 
+                print(f"[ConversationManager] file_name: {file_name}, location: {location}")
+                
                 if file_name and location:
                     # Ejecutar directamente: "crea archivo notas.txt en documentos"
                     result = self.executor.intelligent_manager.smart_create_file(file_name, location)
                     return result["message"]
+                elif location and not file_name:
+                    # Preguntar nombre: "crea archivo en documentos"
+                    self.pending_actions[user_id] = {
+                        'action': 'create_file_in_location',
+                        'location': location  # Preservar mayúsculas originales
+                    }
+                    print(f"[ConversationManager] ✅ Guardada acción pendiente: {self.pending_actions[user_id]}")
+                    return f"¿Qué nombre quieres para el archivo en '{location}'?"  # Usar location original
                 elif file_name and not location:
                     # Verificar dónde guardar: "crea archivo notas.txt"
                     result = self.executor.intelligent_manager.find_or_create_for_file(file_name)
@@ -140,6 +150,14 @@ class ConversationManager:
                 del self.pending_actions[user_id]
                 
                 result = self.executor.intelligent_manager.smart_create_folder(folder_name, location)
+                return result["message"]
+            
+            elif action['action'] == 'create_file_in_location':
+                file_name = response_clean  # Preservar mayúsculas de la respuesta
+                location = action['location']  # Ya tiene las mayúsculas originales
+                del self.pending_actions[user_id]
+                
+                result = self.executor.intelligent_manager.smart_create_file(file_name, location)
                 return result["message"]
             
             elif action['action'] == 'create_file_with_name':
