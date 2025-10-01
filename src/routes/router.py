@@ -1,10 +1,10 @@
-# [file name]: router.py (mejorado)
+# [file name]: router.py (actualizado para estructura modular)
 import yaml
 from pathlib import Path
 from src.cores.ollama_core import OllamaCore
-from src.intent_classifier import IntentClassifier
-from src.system_command_classifier import SystemCommandClassifier
-from src.system_command_executor import SystemCommandExecutor
+from src.routes.intent_classifier import IntentClassifier
+from src.routes.system_command_classifier import SystemCommandClassifier  # Desde routes
+from src.system.system_executor import SystemCommandExecutor  # Desde system
 
 class Router:
     def __init__(self, config_path="configs/cores.yaml"):
@@ -12,8 +12,8 @@ class Router:
         self.config = yaml.safe_load(Path(config_path).read_text())
         self.cores = self._load_cores()
         self.classifier = IntentClassifier()
-        self.system_classifier = SystemCommandClassifier()
-        self.system_executor = SystemCommandExecutor()
+        self.system_classifier = SystemCommandClassifier()  # Ahora desde routes
+        self.system_executor = SystemCommandExecutor()  # Desde system
         print(f"[Router] Cargados núcleos: {list(self.cores.keys())}")
 
     def _load_cores(self):
@@ -76,3 +76,7 @@ class Router:
             return self.cores[core_name].generate(prompt)
         except Exception as e:
             return f"❌ Error en núcleo {core_name}: {str(e)}"
+
+    def get_system_executor(self) -> SystemCommandExecutor:
+        """Retorna el ejecutor de comandos del sistema para acceso directo"""
+        return self.system_executor

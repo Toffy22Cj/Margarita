@@ -15,12 +15,11 @@ from pathlib import Path
 src_path = Path(__file__).parent / "src"
 sys.path.append(str(src_path))
 
-from src.vad_recorder import VADRecorder
-from src.stt import SpeechToText
-from src.tts import TextToSpeech
-from src.router import Router
-from src.intent_classifier import IntentClassifier
-
+from src.utils.vad_recorder import VADRecorder
+from src.utils.stt import SpeechToText
+from src.utils.tts import TextToSpeech
+from src.routes.router import Router
+from src.routes.intent_classifier import IntentClassifier
 
 class MargaritaApp:
     """
