@@ -1,0 +1,138 @@
+baobab %U
+/bin/false
+bluetooth-sendto
+debian-reference
+evince --new-window
+evince %U
+evince-previewer %U
+evolution -c calendar
+evolution -c contacts
+evolution -c current
+evolution -c mail
+evolution -c memos
+evolution -c tasks
+evolution mailto:
+evolution %U
+false
+file-roller %U
+gapplication launch org.gnome.Maps %U
+gapplication launch org.gnome.Weather
+gnome-calculator
+gnome-calendar %U
+gnome-clocks
+gnome-connections %U
+gnome-contacts
+gnome-control-center
+gnome-control-center applications
+gnome-control-center background
+gnome-control-center bluetooth
+gnome-control-center color
+gnome-control-center display
+gnome-control-center keyboard
+gnome-control-center mouse
+gnome-control-center multitasking
+gnome-control-center network
+gnome-control-center notifications
+gnome-control-center online-accounts
+gnome-control-center power
+gnome-control-center printers
+gnome-control-center privacy
+gnome-control-center search
+gnome-control-center sharing
+gnome-control-center sound
+gnome-control-center system
+gnome-control-center system about
+gnome-control-center system datetime
+gnome-control-center system region
+gnome-control-center system users
+gnome-control-center universal-access
+gnome-control-center wacom
+gnome-control-center wellbeing
+gnome-control-center wifi
+gnome-control-center wwan
+gnome-disk-image-mounter %U
+gnome-disks
+gnome-disks --restore-disk-image %U
+gnome-font-viewer %u
+gnome-logs
+gnome-music
+gnome-software --local-filename %f
+gnome-software %U
+gnome-sound-recorder
+gnome-system-monitor
+gnome-terminal
+gnome-terminal --preferences
+gnome-terminal --window
+gnome-text-editor --new-window
+gnome-text-editor %U
+gnome-tour
+gnome-tweaks
+"/home/carlos/idea-IU-252.26199.169/bin/idea" %f
+ibus emoji
+ibus-setup
+im-config
+kitty
+libreoffice --base
+libreoffice --calc
+libreoffice --calc %U
+libreoffice --draw
+libreoffice --draw %U
+libreoffice %F
+libreoffice --impress
+libreoffice --impress %U
+libreoffice --math
+libreoffice --math %U
+libreoffice --writer
+libreoffice --writer %U
+loupe %U
+malcontent-control
+mongodb-compass %U
+nautilus --new-window
+nautilus --new-window %U
+nautilus-autorun-software %u
+nm-connection-editor
+ollaman
+rygel
+seahorse %u
+shotwell -b
+shotwell %f
+shotwell %U
+simple-scan
+snapshot
+spotify %U
+tecla
+totem %U
+/usr/bin/gcr-viewer
+/usr/bin/gnome-browser-connector %u
+/usr/bin/gnome-characters
+/usr/bin/gnome-extensions-app
+/usr/bin/gnome-shell
+/usr/bin/microsoft-edge-stable
+/usr/bin/microsoft-edge-stable --inprivate
+/usr/bin/microsoft-edge-stable %U
+/usr/bin/python3.13
+/usr/bin/snap handle-link %U
+/usr/bin/Xwayland -decorate -displayfd 1
+/usr/libexec/evolution-data-server/evolution-alarm-notify
+/usr/libexec/evolution-data-server/evolution-oauth2-handler %u
+/usr/libexec/gcr-prompter
+/usr/libexec/geoclue-2.0/demos/agent
+/usr/libexec/gnome-remote-desktop-daemon --handover
+/usr/libexec/gnome-user-share-webdav
+/usr/libexec/goa-oauth2-handler %u
+/usr/libexec/ibus-extension-gtk3
+/usr/libexec/ibus-ui-gtk3 --enable-wayland-im --exec-daemon --daemon-args "--xim --panel disable"
+/usr/libexec/shotwell/shotwell-authenticator %u
+/usr/libexec/xdg-desktop-portal-gnome
+/usr/libexec/xdg-desktop-portal-gtk
+/usr/share/code/code %F
+/usr/share/code/code --new-window %F
+/usr/share/code/code --open-url %U
+/usr/share/dbeaver-ce/dbeaver
+/usr/share/discord/Discord
+uxterm
+vim %F
+xdg-user-dirs-gtk-update
+xterm
+yelp %u
+zenity

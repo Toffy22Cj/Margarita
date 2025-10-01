@@ -1,0 +1,28 @@
+# configs/cores.yaml
+# Configuración de núcleos para la asistente "Margarita"
+assistant_name: "Margarita"
+
+cores:
+  conversational:
+    provider: "ollama"
+    model: "qwen3:latest"                # Núcleo principal de conversación (fluido, grande)
+
+  conversational_fallback:
+    provider: "ollama"
+    model: "llama3.1:8b"                 # Fallback más ligero/local si el principal no responde
+
+  coder:
+    provider: "ollama"
+    model: "qwen2.5-coder:latest"        # Núcleo optimizado para programación
+
+  coder_backup:
+    provider: "ollama"
+    model: "deepseek-coder:6.7b"         # Backup para tareas de código
+
+  #translator_service:
+  #  provider: "service"
+ #   model: "libretranslate"              # Servicio HTTP local (por ejemplo http://localhost:5000)
+
+  translator_llm:
+    provider: "ollama"
+    model: "llama3.1:8b"              # Alternativa de traducción con LLM
