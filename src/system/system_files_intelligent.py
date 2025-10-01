@@ -4,23 +4,27 @@ from pathlib import Path
 from .system_files import SystemFiles
 
 class IntelligentFileManager:
-    """Gestor inteligente que verifica existencia y pregunta al usuario"""
+    """Gestor inteligente que verifica existencia y pregunta al usuario - CON SOPORTE PARA RUTAS COMPLEJAS"""
     
     def __init__(self, base_path=None):
         self.files_manager = SystemFiles(base_path)
     
     def smart_create_folder(self, folder_name: str, location: str = None) -> dict:
-        """Crea carpeta inteligentemente verificando existencia - PRESERVA MAYÚSCULAS"""
+        """Crea carpeta inteligentemente verificando existencia - SOPORTA RUTAS COMPLEJAS"""
         result = {
             "success": False,
             "message": "",
             "path": None,
-            "already_exists": False
+            "already_exists": False,
+            "created_paths": []  # Nueva: lista de rutas creadas
         }
+        
+        print(f"[IntelligentFileManager] Creando carpeta: '{folder_name}' en ubicación: '{location}'")
         
         # Construir ruta completa - usar los nombres originales con mayúsculas
         if location:
-            location_path = Path(location)  # Preservar mayúsculas del location
+            # location puede ser una ruta compleja como "Documentos/Proyectos/MiApp"
+            location_path = Path(location)  # Preservar mayúsculas y estructura de rutas
             if not location_path.is_absolute():
                 location_path = self.files_manager.base_path / location_path
             full_path = location_path / folder_name  # Preservar mayúsculas del folder_name
@@ -41,18 +45,28 @@ class IntelligentFileManager:
                 result["message"] = f"❌ Ya existe un archivo con ese nombre: {full_path}"
                 return result
         
-        # Si no existe, crear
+        # Si no existe, crear - parents=True crea todos los directorios padres necesarios
         try:
             full_path.mkdir(parents=True, exist_ok=True)
             result["success"] = True
+            
+            # Registrar todas las rutas creadas (útil para rutas complejas)
+            current_path = full_path
+            while current_path != self.files_manager.base_path and not current_path.exists():
+                # En realidad, mkdir(parents=True) crea todo de una vez, pero podemos registrar la ruta completa
+                current_path = current_path.parent
+            
             result["message"] = f"✅ Carpeta '{folder_name}' creada en: {full_path}"  # Usar folder_name original
+            if "/" in str(location) or "\\" in str(location):
+                result["message"] += f"\n   📁 Ruta completa creada: {location}/{folder_name}"
+            
             return result
         except Exception as e:
             result["message"] = f"❌ Error al crear carpeta: {str(e)}"
             return result
     
     def smart_create_file(self, file_name: str, location: str = None, content: str = "") -> dict:
-        """Crea archivo inteligentemente con verificaciones - PRESERVA MAYÚSCULAS"""
+        """Crea archivo inteligentemente con verificaciones - SOPORTA RUTAS COMPLEJAS"""
         result = {
             "success": False,
             "message": "",
@@ -60,9 +74,12 @@ class IntelligentFileManager:
             "folder_created": False
         }
         
+        print(f"[IntelligentFileManager] Creando archivo: '{file_name}' en ubicación: '{location}'")
+        
         # Construir ruta completa - usar los nombres originales con mayúsculas
         if location:
-            location_path = Path(location)  # Preservar mayúsculas del location
+            # location puede ser una ruta compleja como "Documentos/Proyectos/MiApp"
+            location_path = Path(location)  # Preservar mayúsculas y estructura de rutas
             if not location_path.is_absolute():
                 location_path = self.files_manager.base_path / location_path
             full_path = location_path / file_name  # Preservar mayúsculas del file_name
@@ -73,7 +90,7 @@ class IntelligentFileManager:
 
         result["path"] = str(full_path)
         
-        # Verificar si el directorio padre existe
+        # Verificar si el directorio padre existe - parents=True crea toda la estructura necesaria
         parent_dir = full_path.parent
         if not parent_dir.exists():
             try:
@@ -94,6 +111,11 @@ class IntelligentFileManager:
             result["success"] = True
             folder_msg = " (se creó la carpeta contenedora)" if result["folder_created"] else ""
             result["message"] = f"✅ Archivo '{file_name}' creado en: {full_path}{folder_msg}"  # Usar file_name original
+            
+            # Si la ubicación es una ruta compleja, mostrar información adicional
+            if location and ("/" in location or "\\" in location):
+                result["message"] += f"\n   📁 Ruta: {location}/{file_name}"
+            
             return result
         except Exception as e:
             result["message"] = f"❌ Error al crear archivo: {str(e)}"
@@ -109,7 +131,7 @@ class IntelligentFileManager:
             "suggested_folders": []
         }
         
-        # Si se especifica carpeta destino
+        # Si se especifica carpeta destino (puede ser ruta compleja)
         if target_folder:
             folder_path = Path(target_folder)  # Preservar mayúsculas
             if not folder_path.is_absolute():
@@ -131,7 +153,7 @@ class IntelligentFileManager:
         if suggested_folders:
             result["suggestion"] = f"¿En qué carpeta quieres guardar '{file_name}'? Sugerencias: {', '.join(suggested_folders)}"  # Usar file_name original
         else:
-            result["suggestion"] = f"¿Dónde quieres guardar '{file_name}'? Puedes decirme una carpeta específica."  # Usar file_name original
+            result["suggestion"] = f"¿Dónde quieres guardar '{file_name}'? Puedes decirme una carpeta específica o ruta completa."  # Usar file_name original
         
         return result
     

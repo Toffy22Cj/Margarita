@@ -4,7 +4,7 @@ import os
 
 class SystemCommandClassifier:
     """
-    Clasificador de comandos del sistema MEJORADO
+    Clasificador de comandos del sistema MEJORADO con soporte para rutas complejas
     """
 
     def __init__(self):
@@ -42,25 +42,28 @@ class SystemCommandClassifier:
         }
 
     def sanitize_param(self, param: str) -> str:
-        """Limpia parámetros preservando mayúsculas"""
+        """Limpia parámetros preservando mayúsculas y rutas"""
         if not param:
             return None
-        safe = re.sub(r'[<>:"/\\|?*]', '', param).strip()
+        # Permitir barras y puntos en rutas, pero eliminar caracteres peligrosos
+        safe = re.sub(r'[<>:"\\|?*]', '', param).strip()
+        # Reemplazar múltiples espacios por uno solo, pero mantener barras
+        safe = re.sub(r'\s+', ' ', safe)
         return safe if safe else None
 
     def parse_complex_folder_command(self, text: str) -> dict:
         """
-        Análisis especializado para comandos complejos de carpeta
+        Análisis especializado para comandos complejos de carpeta con rutas
         """
         text_lower = text.lower().strip()  # Solo para matching
         
         print(f"[Classifier] Analizando comando complejo de carpeta: {text}")
         
-        # Patrón 1: "crea carpeta <nombre> en <ubicación>"
+        # Patrón 1: "crea carpeta <nombre> en <ubicación>" con rutas complejas
         pattern1 = r'crea\s+(?:una\s+)?carpeta\s+(?:llamada\s+)?([^\n]+?)\s+en\s+([^\n]+)'
         match1 = re.search(pattern1, text_lower)
         if match1:
-            # Extraer del texto ORIGINAL para preservar mayúsculas
+            # Extraer del texto ORIGINAL para preservar mayúsculas y rutas
             start1, end1 = match1.span(1)
             start2, end2 = match1.span(2)
             folder_name = self.sanitize_param(text[start1:end1])
@@ -73,11 +76,11 @@ class SystemCommandClassifier:
                 'confidence': 'high'
             }
         
-        # Patrón 2: "crea carpeta en <ubicación> <nombre>"
+        # Patrón 2: "crea carpeta en <ubicación> <nombre>" con rutas complejas
         pattern2 = r'crea\s+(?:una\s+)?carpeta\s+en\s+([^\n]+?)\s+(?:llamada\s+)?([^\n]+)'
         match2 = re.search(pattern2, text_lower)
         if match2:
-            # Extraer del texto ORIGINAL para preservar mayúsculas
+            # Extraer del texto ORIGINAL para preservar mayúsculas y rutas
             start1, end1 = match2.span(1)
             start2, end2 = match2.span(2)
             location = self.sanitize_param(text[start1:end1])
@@ -90,11 +93,11 @@ class SystemCommandClassifier:
                 'confidence': 'high'
             }
         
-        # Patrón 3: "crea carpeta en <ubicación>" (sin nombre)
+        # Patrón 3: "crea carpeta en <ubicación>" (sin nombre) con rutas complejas
         pattern3 = r'crea\s+(?:una\s+)?carpeta\s+en\s+([^\n]+)'
         match3 = re.search(pattern3, text_lower)
         if match3:
-            # Extraer del texto ORIGINAL para preservar mayúsculas
+            # Extraer del texto ORIGINAL para preservar mayúsculas y rutas
             start, end = match3.span(1)
             location = self.sanitize_param(text[start:end])
             print(f"[Classifier] Patrón 3 carpeta: ubicación='{location}' (sin nombre)")
@@ -108,16 +111,16 @@ class SystemCommandClassifier:
         return None
 
     def parse_complex_file_command(self, text: str) -> dict:
-        """Análisis para comandos de archivo con ubicación"""
+        """Análisis para comandos de archivo con ubicación y rutas complejas"""
         text_lower = text.lower().strip()
         
         print(f"[Classifier] Analizando comando complejo de archivo: {text}")
         
-        # Patrón 1: "crea archivo <nombre> en <ubicación>"
+        # Patrón 1: "crea archivo <nombre> en <ubicación>" con rutas complejas
         pattern1 = r'crea\s+(?:un\s+)?archivo\s+(?:llamado\s+)?([^\n]+?)\s+en\s+([^\n]+)'
         match1 = re.search(pattern1, text_lower)
         if match1:
-            # Extraer del texto ORIGINAL para preservar mayúsculas
+            # Extraer del texto ORIGINAL para preservar mayúsculas y rutas
             start1, end1 = match1.span(1)
             start2, end2 = match1.span(2)
             file_name = self.sanitize_param(text[start1:end1])
@@ -133,11 +136,11 @@ class SystemCommandClassifier:
                 'confidence': 'high'
             }
         
-        # Patrón 2: "crea archivo en <ubicación> <nombre>"
+        # Patrón 2: "crea archivo en <ubicación> <nombre>" con rutas complejas
         pattern2 = r'crea\s+(?:un\s+)?archivo\s+en\s+([^\n]+?)\s+(?:llamado\s+)?([^\n]+)'
         match2 = re.search(pattern2, text_lower)
         if match2:
-            # Extraer del texto ORIGINAL para preservar mayúsculas
+            # Extraer del texto ORIGINAL para preservar mayúsculas y rutas
             start1, end1 = match2.span(1)
             start2, end2 = match2.span(2)
             location = self.sanitize_param(text[start1:end1])
@@ -153,11 +156,11 @@ class SystemCommandClassifier:
                 'confidence': 'high'
             }
         
-        # Patrón 3: "crea archivo en <ubicación>" (sin nombre)
+        # Patrón 3: "crea archivo en <ubicación>" (sin nombre) con rutas complejas
         pattern3 = r'crea\s+(?:un\s+)?archivo\s+en\s+([^\n]+)'
         match3 = re.search(pattern3, text_lower)
         if match3:
-            # Extraer del texto ORIGINAL para preservar mayúsculas
+            # Extraer del texto ORIGINAL para preservar mayúsculas y rutas
             start, end = match3.span(1)
             location = self.sanitize_param(text[start:end])
             print(f"[Classifier] Patrón 3 archivo: ubicación='{location}' (sin nombre)")
@@ -232,16 +235,16 @@ if __name__ == "__main__":
     classifier = SystemCommandClassifier()
     
     test_commands = [
-        "crea una carpeta en Documentos",
-        "crea carpeta Proyectos en Escritorio", 
-        "crea una carpeta llamada Mis Archivos en Documentos",
-        "crea archivo Notas.txt en Documentos",
-        "crea un archivo en Documentos",
-        "crea archivo en Documentos",
+        "crea una carpeta en Documentos/Proyectos",
+        "crea carpeta MiApp en Documentos/Desarrollo/Apps", 
+        "crea una carpeta llamada Config en Documentos/Sistema/Configuraciones",
+        "crea archivo Notas.txt en Documentos/Personal",
+        "crea un archivo en Documentos/Trabajo/Informes",
+        "crea archivo en Documentos/Universidad/Materias/Matemáticas",
         "abre navegador"
     ]
     
-    print("🔧 Probando clasificador MEJORADO:")
+    print("🔧 Probando clasificador con rutas complejas:")
     for cmd in test_commands:
         result = classifier.classify(cmd)
         print(f"\n📝 Comando: '{cmd}'")
